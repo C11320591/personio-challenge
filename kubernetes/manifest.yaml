@@ -1,0 +1,63 @@
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#  name: personio-challenge
+#  annotations:
+#    kubernetes.io/ingress.class: alb
+#    alb.ingress.kubernetes.io/scheme: internet-facing
+#    alb.ingress.kubernetes.io/load-balancer-name: personio-challenge
+# spec:
+#  rules:
+#  - http:
+#      paths:
+#        - path: /
+#          pathType: Prefix
+#          backend:
+#            service:
+#              name: personio-challenge
+#              port:
+#                number: 8080
+#---
+apiVersion: v1
+kind: Service
+metadata:
+  name: personio-challenge
+spec:
+  # type: NodePort
+  type: LoadBalancer
+  selector:
+    app: personio-challenge  # references Deployment.spec.template.metadata.labels.[*] object
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+      # nodePort: 31234
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: personio-challenge
+spec:
+  replicas: 12
+  selector:
+    matchLabels:
+      app: personio-challenge
+  template:
+    metadata:
+      labels:
+        app: personio-challenge
+    spec:
+      containers:
+        - name: personio-challenge
+          image: 249422412389.dkr.ecr.eu-west-1.amazonaws.com/dmur-challenge:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: HELLO
+              value: "Welcome"
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            periodSeconds: 10
