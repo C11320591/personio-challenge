@@ -5,24 +5,24 @@ export const deploymentManifest = {
     kind: "Deployment",
     metadata: { name: `${APP_NAME}` },
     spec: {
-      replicas: 3,
-      selector: {
-        matchLabels: { app: `${APP_NAME}` }
-      },
-      template: {
-        metadata: {
-          labels: { app: `${APP_NAME}` }
+        replicas: 12,
+        selector: {
+            matchLabels: { app: `${APP_NAME}` }
         },
-        spec: {
-          containers: [{
-            name: `${APP_NAME}`,
-            image: WEBSERVER_ATTRIBUTES.ECR_IMAGE,
-            ports: [{ containerPort: WEBSERVER_ATTRIBUTES.PORTS_CONFIG.port }],
-            env: WEBSERVER_ATTRIBUTES.ENVIRONMENT_VARIABLES,
-            imagePullPolicy: "Always",
-          }],
-        },
-      }
+        template: {
+            metadata: {
+                labels: { app: `${APP_NAME}` }
+            },
+            spec: {
+                containers: [{
+                    name: `${APP_NAME}`,
+                    image: WEBSERVER_ATTRIBUTES.ECR_IMAGE,
+                    ports: [{ containerPort: WEBSERVER_ATTRIBUTES.PORTS_CONFIG.port }],
+                    env: WEBSERVER_ATTRIBUTES.ENVIRONMENT_VARIABLES,
+                    imagePullPolicy: "Always",
+                }],
+            },
+        }
     }
 };
 
@@ -31,8 +31,8 @@ export const serviceManifest = {
     kind: "Service",
     metadata: { name: `${APP_NAME}` },
     spec: {
-      type: "LoadBalancer",
-      selector: { app: `${APP_NAME}` },
-      ports: [WEBSERVER_ATTRIBUTES.PORTS_CONFIG]
+        type: "LoadBalancer",
+        selector: { app: `${APP_NAME}` },
+        ports: [WEBSERVER_ATTRIBUTES.PORTS_CONFIG]
     }
-  };
+};

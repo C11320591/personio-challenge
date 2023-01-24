@@ -1,5 +1,10 @@
 export const APP_NAME = "personio-challenge";
 
+/**
+ * The "STACK_ENVIRONMENTS" map represented below can
+ * be used for defining a CDK pipeline if deploying
+ * the application to multiple environments.
+ */
 export const STACK_ENVIRONMENTS = {
     "dev": {
         account: "249422412389",
@@ -13,7 +18,7 @@ export const STACK_ENVIRONMENTS = {
     }
 };
 
-/*
+/**
  * Webserver attributes are defined here and referenced
  * in manifests.ts to ensure definition consistency.
  */
