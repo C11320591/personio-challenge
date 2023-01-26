@@ -3,17 +3,17 @@
 For this challenge, I used the AWS CDK for the purposes of creating infrastructure to host the webserver which is managed by Kubernetes.
 
 ### Stack Definition
-The CDK stack is relatively simple. It contains a single but powerful construct; - `EKS.Cluster` ([docs](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_eks.Cluster.html)). By omitting constructor properties related to the AWS VPC, CDK takes care of creating the required resources (Subnets, NAT Gateways, Elastic IPs, etc) for hosting the cluster. I did however an optional property in the constructor:
+The CDK stack is relatively simple. It contains a single but powerful construct; - `EKS.Cluster` ([docs](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_eks.Cluster.html)). By omitting constructor properties related to the AWS VPC, CDK takes care of creating the required resources (Subnets, NAT Gateways, Elastic IPs, etc) for hosting the cluster. I did however add an optional property in the constructor:
 * _**defaultCapacity**_ - a value that defaults to 2 but is overwritten here to deploy a single host in each availability zone.
 
 ### Application Deployment
-Additionally, the stack includes two Kubernetes manifests (Deployment, Service) that are used to deploy the application upon stack creation. Of course, this could be done manually by connecting to the cluster post-infrastructure creation and applying the manifests using `kubectl` – however, I wanted to demonstrate that how can be achieved via CDK.
+The stack includes two Kubernetes manifest objects (Deployment, Service) that are used to deploy the application upon stack creation. Of course, this could be done manually by connecting to the cluster post-infrastructure creation and applying the manifests using `kubectl` – however, I wanted to demonstrate that how can be achieved via CDK.
 
 A possible disadvantage of applying the cluster configuration via CDK is running the risk of manually updating the cluster (using `kubectl`) rendering the stack definition as stale until it is manually updated.
 
 ### Traffic Distribution
 The webserver is deployed to EC2 Worker Nodes in multiple availability zones. This is configured to ensure that the webserver remains online in the event that a zone(s) becomes unreachable. Additionally, the Kubernetes service type is configured as _“LoadBalancer”_ which places the EC2 Worker Nodes behind an AWS Classic ELB to ensure that inbound traffic is evenly distributed amongst the Pods running the webserver
-(See `serviceManifest.spec.type` in the [manifest](https://github.com/C11320591/personio-challenge/blob/master/cdk/lib/manifests/manifests.ts)).
+(See `serviceManifest.spec.type` in manifest.ts).
 
 ---
 
@@ -23,7 +23,7 @@ The webserver is deployed to EC2 Worker Nodes in multiple availability zones. Th
 
 To transform this application into a CI/CD pipeline, we can leverage the CodePipeline construct ([docs](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.pipelines.CodePipeline.html)) for deploying the application to multiple stacks (for example, deploying to multi-region application hosted in the same AWS account).
 
-In the application code, I have included a dictionary object in the [constants.ts](https://github.com/C11320591/personio-challenge/blob/master/cdk/lib/constants/constants.ts) file (`"STACK_ENVIRONMENTS"`) which could be used to define the pipeline structure and, for example, configure a pre-prod environment that could be used for testing changes before prod release.
+In the application code, I have included a dictionary object in the constants.ts file (`"STACK_ENVIRONMENTS"`) which could be used to define the pipeline structure and, for example, configure a pre-prod environment that could be used for testing changes before prod release.
 
 > “Describe how each of the necessary deployment steps works”
 
@@ -79,7 +79,7 @@ kubectl rollout undo deployment/<deployment-name>
 Although it is lightweight and does not process any confidential data, we could reconfigure the Go application to use TLS making it secure. I briefly looked at the Go documentation and understand that it just needs a couple of extra parameters: a certificate (which was generated in the alpine image in the Dockerfile) and a key ([example provided on Go documentation](https://pkg.go.dev/net/http#example-ListenAndServeTLS)).
 
 ### EC2 AutoScaling
-In the interest of maintaining high availability, we could manually define the AutoScaling Group configuration for the EC2 Worker Nodes – for instance, we could configure a min/max capacity so the application scales out and is not isolated to a subset of EC2 Instances (risk of saturation in case of multiple Kubernetes pods on small set of hosts).
+In the interest of maintaining high availability, we could manually define the AutoScaling Group configuration for the EC2 Worker Nodes – for instance, we could configure a min/max capacity so the application scales out and is not restricted to a pre-defined number of nodes (risk of saturation in case of multiple Kubernetes pods on small set of hosts).
 
 ### Systems Manager
 Since the webserver is hosted on EC2 (Worker Nodes), we manage the underlying hosts. This means we are responsible for applying updates and security patches. To do so, we could onboard the EC2 instances with [AWS Systems Manager](https://docs.aws.amazon.com/systems-manager/index.html) which provides access to multiple host management tool such as Patch Manager and Run Command. Alternatively, we could investigate whether to deploy this application on Fargate which abstracts the OS layer, however comes at a higher expense.
